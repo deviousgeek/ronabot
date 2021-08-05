@@ -7,10 +7,11 @@ const data = require("./lib/data");
 const { dateBet, dateNow, resolveUser } = require("./lib/util");
 const {
   botUserId,
-  commandPrefix,
   moderatorPrefix,
   moderators,
   allowedChannels,
+  commandPrefix,
+  botStatus,
 } = config;
 
 const getClient = () => {
@@ -22,8 +23,6 @@ const getClient = () => {
 
 // Bot entrypont.
 const main = () => {
-  const { botStatus, commandPrefix } = config;
-
   const client = getClient();
 
   client.on("ready", () => {
@@ -169,31 +168,25 @@ const help = (msg) => {
   });
 
   msg.channel.send(
-    new Discord.MessageEmbed()
-      .setTitle("RonaBot")
-      .setColor("#DAF7A6")
-      .addFields(fields)
+    new Discord.MessageEmbed().setTitle("RonaBot").addFields(fields)
   );
 };
 
 const getRegions = async (msg) => {
   return data.getRegions().then((regions) => {
     msg.channel.send(
-      new Discord.MessageEmbed()
-        .setTitle("Regions")
-        .setColor("#DAF7A6")
-        .addFields([
-          {
-            name: `There are ${regions.length} regions open for betting:`,
-            value: `
+      new Discord.MessageEmbed().setTitle("Regions").addFields([
+        {
+          name: `There are ${regions.length} regions open for betting:`,
+          value: `
               ${regions
                 .map((r) => "`" + r.value + "` - " + r.label)
                 .sort()
                 .join("\n")}
               Use the region acronym when betting.
             `,
-          },
-        ])
+        },
+      ])
     );
   });
 };
