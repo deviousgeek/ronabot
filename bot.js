@@ -96,8 +96,6 @@ const moderatorSwitch = (input, msg) => {
   switch (command) {
     case "placed":
       return getPlacedBets(msg);
-    case "set-regions":
-      return data.setRegions().then((r) => msg.reply(r));
     case "set-result":
       return calculateResult(msg);
   }

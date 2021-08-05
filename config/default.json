@@ -16,12 +16,5 @@
         10,
         5,
         1
-    ],
-    "regions": [
-        {
-            "value": "NSW",
-            "label": "New South Wales",
-            "open": true
-        }
     ]
 }
