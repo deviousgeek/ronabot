@@ -1,0 +1,19 @@
+{
+  "name": "rona-bot",
+  "version": "0.0.2",
+  "main": "bot.js",
+  "author": "Tim McBride <tim@deviousgeek.com>",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "config": "^3.3.6",
+    "date-fns": "^2.23.0",
+    "discord.js": "^12.5.3",
+    "diskdb": "^0.1.17",
+    "lodash": "^4.17.21",
+    "safe-eval": "^0.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}

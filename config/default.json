@@ -1,0 +1,27 @@
+{
+    "botToken": "",
+    "botUserId": "",
+    "botStatus": "",
+    "commandPrefix": "!",
+    "moderatorPrefix": "$",
+    "database": {
+        "file": "./disk.db"
+    },
+    "allowedChannels": [],
+    "moderators": [],
+    "points": [
+        100,
+        50,
+        25,
+        10,
+        5,
+        1
+    ],
+    "regions": [
+        {
+            "value": "NSW",
+            "label": "New South Wales",
+            "open": true
+        }
+    ]
+}

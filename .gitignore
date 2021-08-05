@@ -1,0 +1,3 @@
+config/local.json
+disk.db/*
+node_modules/**
