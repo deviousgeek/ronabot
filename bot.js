@@ -1,10 +1,10 @@
 const Discord = require("discord.js");
 const config = require("config");
-const data = require("./data");
 const { orderBy, groupBy } = require("lodash");
 const { format, add, parse, parseISO } = require("date-fns");
 const safeEval = require("safe-eval");
-const { dateBet, dateNow, resolveUser } = require("./util");
+const data = require("./lib/data");
+const { dateBet, dateNow, resolveUser } = require("./lib/util");
 const {
   botUserId,
   commandPrefix,
