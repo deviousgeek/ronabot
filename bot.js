@@ -4,7 +4,7 @@ const { orderBy, groupBy } = require("lodash");
 const { format, add, parse, parseISO } = require("date-fns");
 const safeEval = require("safe-eval");
 const data = require("./lib/data");
-const { dateBet, dateNow, resolveUser } = require("./lib/util");
+const { dateBet, dateNow, resolveUser, numFmt } = require("./lib/util");
 const {
   botUserId,
   moderatorPrefix,
@@ -12,6 +12,7 @@ const {
   allowedChannels,
   commandPrefix,
   botStatus,
+  betObjectName
 } = config;
 
 const getClient = () => {
@@ -36,6 +37,12 @@ const main = () => {
     // Validate incoming message.
     if (!msg.channel) return;
     if (msg.author.id && msg.author.id === botUserId) return;
+
+
+    if (msg.content.includes("␇")) {
+      msg.reply("🔔 Ding dong you're wrong.");
+      return;
+    }
 
     console.log(`============ (${new Date().toISOString()})`);
     console.log(
@@ -140,15 +147,15 @@ const help = (msg) => {
   fields.push({
     name: `The Game`,
     value: `
-      This is a COVID-19 daily case number betting bot.
+      This is a COVID-19 daily ${betObjectName} number betting bot.
 
-      - Each day you can place a bet (for points) on the case number in one or more regions for the _next day_. Bets can be placed and updated up to midnight (_23:59:59_).
+      - Each day you can place a bet (for points) on the ${betObjectName} number in one or more regions for the _next day_. Bets can be placed and updated up to midnight (_23:59:59_).
 
-      - Points are awarded based on how close you are to the announced case number. 100 points for 1st, 50 for 2nd, 25 for 3rd, 10 for 4th, 5 for 5th and 1 for 6th. No points are awarded beyond this. There is also a leaderboard for average "distance" from the case number.
+      - Points are awarded based on how close you are to the announced ${betObjectName} number. 100 points for 1st, 50 for 2nd, 25 for 3rd, 10 for 4th, 5 for 5th and 1 for 6th. No points are awarded beyond this. There is also a leaderboard for average "distance" from the ${betObjectName} number.
 
       - Points for ties are split between the winners.
 
-      - The score is calculated once the case numbers have been confirmed for that region, which may not be at a consistent time every day.
+      - The score is calculated once the ${betObjectName} numbers have been confirmed for that region, which may not be at a consistent time every day.
       `,
   });
 
@@ -193,7 +200,7 @@ const calculateResult = async (msg) => {
   const parts = msg.content.split(" ");
   if (parts.length < 3 || parts.length > 4) {
     return msg.reply(
-      "Specify a region and the case number. (eg: `$set-result nsw 150`)"
+      `Specify a region and the ${betObjectName} number. (eg: \`$set-result nsw 150\`)`
     );
   }
 
@@ -322,7 +329,7 @@ const evaluate = async (msg) => {
 
   try {
     const result = safeEval(req, { content: msg.content, db, msg });
-    if (!!result.then) {
+    if (result && !!result.then) {
       result.then((res) => {
         if (res) {
           return msg.reply("```" + res + "```");
@@ -382,14 +389,14 @@ const placeBet = async (msg) => {
   if (existingBet) {
     if (existingBet.bet === amount) {
       return msg.reply(
-        `🤷 Your already have a bet of **${existingBet.bet}** in **${existingBet.regionId}** for **${existingBet.date}**. There's nothing to do!`
+        `🤷 Your already have a bet of **${numFmt(existingBet.bet)}** in **${existingBet.regionId}** for **${existingBet.date}**. There's nothing to do!`
       );
     }
     message = new Discord.MessageEmbed().setTitle(`🎟 Update Bet`).addFields([
       {
-        name: `Your bet: ${amount} cases.`,
-        value: `\n\nYou already have a bet of ${existingBet.bet} for **${dbRegion.value}** on the **${date}**.\n
-        Would you like to change it to **${amount}**?\n
+        name: `Your bet: ${numFmt(amount)} ${betObjectName}s.`,
+        value: `\n\nYou already have a bet of ${numFmt(existingBet.bet)} for **${dbRegion.value}** on the **${date}**.\n
+        Would you like to change it to **${numFmt(amount)}**?\n
       React with ✅ to confirm or ❌ to decline (within 60 seconds).
       `,
       },
@@ -397,7 +404,7 @@ const placeBet = async (msg) => {
   } else {
     message = new Discord.MessageEmbed().setTitle(`🎟 Place Bet`).addFields([
       {
-        name: `Your bet: ${amount} cases.`,
+        name: `Your bet: ${numFmt(amount)} ${betObjectName}s.`,
         value: `\n\nAre you sure you'd like to place this bet for **${dbRegion.value}** on **${date}**?\n
       React with ✅ to confirm or ❌ to decline (within 60 seconds).
       `,
@@ -425,7 +432,7 @@ const placeBet = async (msg) => {
         return msg.channel.send(`OK! No bet made.`);
       } else {
         return msg.channel.send(
-          `OK! Your bet remains at **${existingBet.bet}**.`
+          `OK! Your bet remains at **${numFmt(existingBet.bet)}**.`
         );
       }
     } else {
@@ -529,7 +536,7 @@ const getLeaderboard = async (msg) => {
           .map(
             (s, i) =>
               `${i + 1}. ${s.userId} - **${withDistance ? "± " : ""}${
-                s.score
+                numFmt(s.score)
               }**`
           )
           .join("\n")}
@@ -543,7 +550,7 @@ const getLeaderboard = async (msg) => {
               .map(
                 (s, i) =>
                   `${i + 1}. ${s.userId} - **${withDistance ? "± " : ""}${
-                    s.score
+                    numFmt(s.score)
                   }**`
               )
               .join("\n"),
@@ -628,7 +635,7 @@ const getResults = async (msg) => {
           const result = results.find((r) => r.regionId === regionId);
           if (!result) return;
           return {
-            name: `${regionId} - ${result.amount} case${
+            name: `${regionId} - ${numFmt(result.amount)} ${betObjectName}${
               result.amount > 1 ? "s" : ""
             }`,
             value: scores
@@ -636,7 +643,7 @@ const getResults = async (msg) => {
                 (s, i) =>
                   `${i + 1}. ${s.userId} - **${s.score}${
                     s.tied ? "t" : ""
-                  }** (± ${s.distance} case${s.distance > 1 ? "s" : ""})`
+                  }** (± ${numFmt(s.distance)} ${betObjectName}${s.distance > 1 ? "s" : ""})`
               )
               .join("\n"),
           };
@@ -644,7 +651,7 @@ const getResults = async (msg) => {
         {
           name: "Notes",
           value:
-            "_user#name_ **points awarded** (± distance from real case number).\nA **t** indicates that there is a tie with another user and that the score has been split up.",
+            `_user#name_ **points awarded** (± distance from real ${betObjectName} number).\nA **t** indicates that there is a tie with another user and that the score has been split up.`,
         },
       ])
   );
@@ -679,9 +686,9 @@ const getScoreboard = async (msg) => {
         ${Object.keys(grouped)
           .map(
             (k) =>
-              `${k} - **${grouped[k].score}** point${
+              `${k} - **${numFmt(grouped[k].score)}** point${
                 grouped[k].score > 1 ? "s" : ""
-              } / ± **${grouped[k].distance}** total distance.`
+              } / ± **${numFmt(grouped[k].distance)}** total distance.`
           )
           .join("\n")}
         `
@@ -689,7 +696,7 @@ const getScoreboard = async (msg) => {
       },
       {
         name: "Total",
-        value: `**${totalScore}** point${totalScore > 1 ? "s" : ""}`,
+        value: `**${numFmt(totalScore)}** point${totalScore > 1 ? "s" : ""}`,
       },
     ])
   );
@@ -726,7 +733,7 @@ const getBets = async (msg) => {
       .addFields(
         bets.map((bet) => ({
           name: `${bet.regionId}`,
-          value: `\n**Bet**: ${bet.bet}\n**Placed**: ${format(
+          value: `\n**Bet**: ${numFmt(bet.bet)}\n**Placed**: ${format(
             parseISO(bet.updated),
             "yyyy-MM-dd HH:mm:ss"
           )}\n`,
